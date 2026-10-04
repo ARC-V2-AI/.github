@@ -10,6 +10,30 @@
 
 ---
 
+## Table of Contents
+
+* [What is ARC-V2-AI?](#what-is-arc-v2-ai)
+* [Projects](#projects)
+
+  * [ARC V2 Core](#arc-v2-core)
+  * [ARC V2 Inference](#arc-v2-inference)
+* [Architecture Principles](#architecture-principles)
+
+  * [Local-first](#local-first)
+  * [Service-oriented](#service-oriented)
+  * [Explicit separation](#explicit-separation)
+  * [Persistent by design](#persistent-by-design)
+  * [Linux-native](#linux-native)
+* [Development Status](#development-status)
+* [References & Documentation](#references--documentation)
+
+  * [ARC V2 Documentation](#arc-v2-documentation)
+  * [Development Guides](#development-guides)
+  * [Repository Documentation](#repository-documentation)
+* [Contributing](#contributing)
+
+---
+
 ## What is ARC-V2-AI?
 
 ARC-V2-AI develops the system architecture and infrastructure required to build **persistent local AI environments** rather than isolated model interfaces.
@@ -38,9 +62,9 @@ ARC V2 Core provides the foundational system layer: boot, service installation, 
 
 Its architecture deliberately separates three concerns:
 
-- **Forge** — manages what is installed.
-- **Pulse** — manages what is running.
-- **Service Runner** — provides how a service runs.
+* **Forge** — manages what is installed.
+* **Pulse** — manages what is running.
+* **Service Runner** — provides how a service runs.
 
 Services remain independent components that provide the actual capabilities of the system.
 
@@ -50,7 +74,7 @@ Local inference infrastructure for ARC V2, providing the model-serving layer use
 
 ---
 
-## Architecture principles
+## Architecture Principles
 
 ### Local-first
 
@@ -74,11 +98,34 @@ ARC V2 is designed around Linux as the primary operating environment and uses sy
 
 ---
 
-## Development status
+## Development Status
 
 ARC V2 is under **active development**. Architecture, interfaces, and implementation details may change as the system develops.
 
 Repositories should be treated according to their own documented stability and compatibility guarantees.
+
+---
+
+## References & Documentation
+
+This section collects the documentation used to understand, develop, and extend the ARC V2 system.
+
+### ARC V2 Documentation
+
+* **[ARC V2 Core](https://github.com/ARC-V2-AI/ARC-V2-Core)** — Operating core, Forge, Pulse, service lifecycle, installation, and runtime architecture.
+* **[ARC V2 Service Runner](https://github.com/ARC-V2-AI/ARC-V2-Service-Runner)** — Service contract, runtime context, runner behavior, readiness, health, and lifecycle.
+* **[ARC V2 Inference](https://github.com/ARC-V2-AI/ARC-V2-Inference)** — Local inference and model-serving infrastructure.
+
+### Development Guides
+
+* **[Building an ARC V2 Service](https://github.com/ARC-V2-AI/.github/docs/BUILDING-A-SERVICE.md)** — Guide for creating, packaging, installing, and developing an independently installable ARC V2 service.
+* **[ARC V2 Services](https://github.com/ARC-V2-AI/ARC-V2-Services)** — Service documentation and examples.
+
+### Repository Documentation
+
+For implementation details, configuration, development setup, and repository-specific conventions, refer to the documentation included in each individual repository.
+
+The organization README provides the architectural overview; individual repositories remain the authoritative source for their own APIs, configuration, and development requirements.
 
 ---
 
