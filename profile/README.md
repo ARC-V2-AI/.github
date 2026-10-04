@@ -118,7 +118,7 @@ This section collects the documentation used to understand, develop, and extend 
 
 ### Development Guides
 
-* **[Building an ARC V2 Service](https://github.com/ARC-V2-AI/.github/docs/BUILDING-A-SERVICE.md)** — Guide for creating, packaging, installing, and developing an independently installable ARC V2 service.
+* **[Building an ARC V2 Service](docs/BUILDING-A-SERVICE.md)** — Guide for creating, packaging, installing, and developing an independently installable ARC V2 service.
 * **[ARC V2 Services](https://github.com/ARC-V2-AI/ARC-V2-Services)** — Service documentation and examples.
 
 ### Repository Documentation
