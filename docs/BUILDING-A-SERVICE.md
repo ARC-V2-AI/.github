@@ -1,32 +1,52 @@
+<div align="center">
+
 # Building an Installable ARC V2 Service
 
-> Create a normal Python package, add the ARC service metadata, implement the `Service` contract, and let Forge, the Service Runner, and Pulse handle the system around it.
+**Create a normal Python package, add the ARC service metadata, implement the `Service` contract, and let Forge, the Service Runner, and Pulse handle the system around it.**
 
-## Table of contents
+<br>
 
-- [Getting Started](#getting-started)
-  - [1. Create the project](#1-create-the-project)
-  - [2. Add the Service Runner](#2-add-the-service-runner)
-  - [3. Add ARC service metadata](#3-add-arc-service-metadata)
-  - [4. Create the service scaffold](#4-create-the-service-scaffold)
-  - [5. Install the service](#5-install-the-service)
-  - [6. Verify the service](#6-verify-the-service)
-- [Service Configuration](#service-configuration)
-- [Service Class](#service-class)
-- [Runtime Context](#runtime-context)
-- [Readiness and Health](#readiness-and-health)
-- [Shutdown](#shutdown)
-- [Dependencies](#dependencies)
-- [Restart and Health Policies](#restart-and-health-policies)
-- [Architecture](#architecture)
-- [Project Structure](#project-structure)
-- [Next Steps](#next-steps)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python\&logoColor=white)](#)
+[![uv](https://img.shields.io/badge/Build-uv-6F42C1?logo=astral\&logoColor=white)](#)
+[![ARC V2](https://img.shields.io/badge/ARC%20V2-Service-blue)](#)
+[![Architecture](https://img.shields.io/badge/architecture-service--oriented-2ea44f)](#)
+
+</div>
+
+---
+
+<details>
+<summary><strong>Table of Contents</strong></summary>
+
+<br>
+
+* [Getting Started](#getting-started)
+
+  * [1. Create the project](#1-create-the-project)
+  * [2. Add the Service Runner](#2-add-the-service-runner)
+  * [3. Add ARC service metadata](#3-add-arc-service-metadata)
+  * [4. Create the service scaffold](#4-create-the-service-scaffold)
+  * [5. Install the service](#5-install-the-service)
+  * [6. Verify the service](#6-verify-the-service)
+* [Service Configuration](#service-configuration)
+* [Service Class](#service-class)
+* [Runtime Context](#runtime-context)
+* [Readiness and Health](#readiness-and-health)
+* [Shutdown](#shutdown)
+* [Dependencies](#dependencies)
+* [Restart and Health Policies](#restart-and-health-policies)
+* [Architecture](#architecture)
+* [Project Structure](#project-structure)
+* [Next Steps](#next-steps)
+
+</details>
 
 ---
 
 ## Getting Started
 
-The fastest way to build an ARC service is to start with a normal `uv` package and add the ARC service contract.
+> [!TIP]
+> The fastest way to build an ARC service is to start with a normal `uv` package and add the ARC service contract.
 
 ### 1. Create the project
 
@@ -48,15 +68,20 @@ arc-v2-test-service/
         └── service.py
 ```
 
+---
+
 ### 2. Add the Service Runner
 
 Add the ARC Service Runner as a Python dependency:
 
 ```bash
-uv add "arc-v2-service-runner>=0.1.0,<0.2.0"
+uv add git+https://github.com/ARC-V2-AI/service-runner.git
 ```
 
-The runner provides the `Service` base class, runtime context, status types, and the generic process runner used by ARC services. fileciteturn0file0L9-L13
+> [!NOTE]
+> The runner provides the `Service` base class, runtime context, status types, and the generic process runner used by ARC services.
+
+---
 
 ### 3. Add ARC service metadata
 
@@ -103,6 +128,8 @@ restart = "on-failure"
 health = "restart"
 depends = []
 ```
+
+---
 
 ### 4. Create the service scaffold
 
@@ -151,9 +178,12 @@ class TestService(Service):
         self._stop_event.set()
 ```
 
-That is enough for a real installable ARC service.
+> [!IMPORTANT]
+> That is enough for a real installable ARC service.
 
-The framework discovers the `Service` subclass from the configured module; you do not need to write a custom runner or IPC implementation. fileciteturn0file0L156-L175
+The framework discovers the `Service` subclass from the configured module; you do not need to write a custom runner or IPC implementation.
+
+---
 
 ### 5. Install the service
 
@@ -163,12 +193,6 @@ From the service project:
 arc install .
 ```
 
-For development:
-
-```bash
-arc install . --editable
-```
-
 You can also install from another local path or a Git source:
 
 ```bash
@@ -176,7 +200,10 @@ arc install /path/to/arc-v2-test-service
 arc install <git-source>
 ```
 
-Forge installs the package into the ARC service runtime and registers the service for Pulse. fileciteturn0file2L41-L61
+> [!NOTE]
+> Forge installs the package into the ARC service runtime and registers the service for Pulse.
+
+---
 
 ### 6. Verify the service
 
@@ -204,15 +231,15 @@ arc remove test
 
 The ARC-specific configuration lives in `[tool.arc.service]`.
 
-| Field | Purpose |
-| --- | --- |
-| `id` | Stable ARC service identifier |
-| `module` | Python module containing the `Service` subclass |
-| `name` | Human-readable service name |
-| `description` | Description shown by ARC |
-| `restart` | Process restart policy |
-| `health` | Action for repeated health failures |
-| `depends` | Other ARC services required before startup |
+| Field         | Purpose                                         |
+| ------------- | ----------------------------------------------- |
+| `id`          | Stable ARC service identifier                   |
+| `module`      | Python module containing the `Service` subclass |
+| `name`        | Human-readable service name                     |
+| `description` | Description shown by ARC                        |
+| `restart`     | Process restart policy                          |
+| `health`      | Action for repeated health failures             |
+| `depends`     | Other ARC services required before startup      |
 
 The example service uses the following configuration:
 
@@ -229,7 +256,8 @@ depends = []
 
 ### Python dependencies vs ARC dependencies
 
-These are different concepts:
+> [!IMPORTANT]
+> These are different concepts:
 
 ```toml
 dependencies = [
@@ -243,7 +271,7 @@ installs Python packages.
 depends = ["inference", "memory"]
 ```
 
-declares dependencies on other ARC services for Pulse. fileciteturn0file2L111-L127
+declares dependencies on other ARC services for Pulse.
 
 ---
 
@@ -257,14 +285,15 @@ from arc_service.service import Service
 
 The service contract is centered around four methods:
 
-| Method | Purpose |
-| --- | --- |
-| `run()` | Main long-running work |
-| `ready()` | Reports whether initialization is complete |
+| Method      | Purpose                                            |
+| ----------- | -------------------------------------------------- |
+| `run()`     | Main long-running work                             |
+| `ready()`   | Reports whether initialization is complete         |
 | `healthy()` | Reports whether the service is operating correctly |
-| `stop()` | Performs graceful shutdown |
+| `stop()`    | Performs graceful shutdown                         |
 
-`start(ctx)` is provided by the framework and normally should not be overridden. fileciteturn0file2L169-L186
+> [!IMPORTANT]
+> `start(ctx)` is provided by the framework and normally should not be overridden.
 
 ### `run()`
 
@@ -282,13 +311,13 @@ async def run(self) -> None:
         await asyncio.sleep(1)
 ```
 
-Keep blocking work out of the event loop and manage your own internal resources. fileciteturn0file2L394-L414
+Keep blocking work out of the event loop and manage your own internal resources.
 
 ---
 
 ## Runtime Context
 
-The Service Runner creates a `BaseContext` and makes it available as `self.ctx` before `run()` starts. fileciteturn0file2L208-L230
+The Service Runner creates a `BaseContext` and makes it available as `self.ctx` before `run()` starts.
 
 ```python
 self.ctx.logger
@@ -309,13 +338,14 @@ self.ctx.logger.info("Starting %s", self.ctx.service_name)
 value = self.ctx.env.get("MY_SERVICE_SETTING")
 ```
 
-ARC prepares the service environment before the process starts. Services do not load the global ARC `.env` themselves. fileciteturn0file2L228-L230
+> [!NOTE]
+> ARC prepares the service environment before the process starts. Services do not load the global ARC `.env` themselves.
 
 ---
 
 ## Readiness and Health
 
-ARC treats **readiness** and **health** as different states. fileciteturn0file2L288-L328
+ARC treats **readiness** and **health** as different states.
 
 ### Readiness
 
@@ -333,7 +363,7 @@ async def ready(self) -> tuple[bool, str | None]:
     return False, "still starting"
 ```
 
-Typical readiness conditions include a loaded model, listening server, connected database, initialized workers, or available required resources. fileciteturn0file2L300-L306
+Typical readiness conditions include a loaded model, listening server, connected database, initialized workers, or available required resources.
 
 ### Health
 
@@ -351,9 +381,10 @@ async def healthy(self) -> tuple[bool, str | None]:
     return True, None
 ```
 
-Typical health failures include lost dependencies, failed workers, unavailable required resources, or unrecoverable internal state. fileciteturn0file2L320-L337
+Typical health failures include lost dependencies, failed workers, unavailable required resources, or unrecoverable internal state.
 
-Both methods should stay lightweight because Pulse may call them frequently. fileciteturn0file0L154-L154
+> [!TIP]
+> Both methods should stay lightweight because Pulse may call them frequently.
 
 ---
 
@@ -365,7 +396,7 @@ When Pulse stops a service, the Runner calls:
 await service.stop()
 ```
 
-Use `stop()` to release resources and signal your main loop to terminate. fileciteturn0file2L347-L357
+Use `stop()` to release resources and signal your main loop to terminate.
 
 A simple pattern is:
 
@@ -398,7 +429,7 @@ module = "arc_agent.service"
 depends = ["inference", "memory"]
 ```
 
-Pulse uses these dependencies to determine startup order and waits for required dependencies to become ready before starting the dependent service. fileciteturn0file2L416-L437
+Pulse uses these dependencies to determine startup order and waits for required dependencies to become ready before starting the dependent service.
 
 For example:
 
@@ -408,7 +439,8 @@ inference ──┐
 memory ─────┘
 ```
 
-Declare only real ARC service dependencies. Do not use `depends` for Python packages.
+> [!IMPORTANT]
+> Declare only real ARC service dependencies. Do not use `depends` for Python packages.
 
 ---
 
@@ -420,11 +452,11 @@ Declare only real ARC service dependencies. Do not use `depends` for Python pack
 restart = "on-failure"
 ```
 
-| Value | Meaning |
-| --- | --- |
-| `always` | Restart whenever the process exits |
+| Value        | Meaning                                       |
+| ------------ | --------------------------------------------- |
+| `always`     | Restart whenever the process exits            |
 | `on-failure` | Restart when the process exits unsuccessfully |
-| `never` | Do not restart automatically |
+| `never`      | Do not restart automatically                  |
 
 ### Health
 
@@ -432,13 +464,14 @@ restart = "on-failure"
 health = "restart"
 ```
 
-| Value | Meaning |
-| --- | --- |
-| `ignore` | Record unhealthy state but keep the service running |
-| `restart` | Restart after repeated unhealthy checks |
-| `stop` | Stop after repeated unhealthy checks |
+| Value     | Meaning                                             |
+| --------- | --------------------------------------------------- |
+| `ignore`  | Record unhealthy state but keep the service running |
+| `restart` | Restart after repeated unhealthy checks             |
+| `stop`    | Stop after repeated unhealthy checks                |
 
-These policies are handled by Pulse rather than by the service itself. fileciteturn0file2L153-L167
+> [!NOTE]
+> These policies are handled by Pulse rather than by the service itself.
 
 ---
 
@@ -449,19 +482,19 @@ An installed ARC service sits between the common ARC infrastructure and its own 
 ```text
                   ARC Core
                      │
-             ┌───────┴────────┐
-             │                │
-           Forge             Pulse
-             │                │
-        installs        supervises
-             │                │
-             ▼                │
-       ARC Service Runtime    │
-             │                │
-       Service Runner ◄───────┘
-             │
-             ▼
-        Your Service
+              ┌───────┴────────┐
+              │                │
+            Forge             Pulse
+              │                │
+         installs        supervises
+              │                │
+              ▼                │
+        ARC Service Runtime    │
+              │                │
+        Service Runner ◄───────┘
+              │
+              ▼
+         Your Service
 ```
 
 The responsibilities remain intentionally separate:
@@ -474,9 +507,10 @@ The responsibilities remain intentionally separate:
 >
 > **The service provides the actual capability.**
 
-Forge can install and register a service without supervising its process. Pulse controls lifecycle, dependencies, readiness, health, restart, and shutdown. fileciteturn0file2L41-L69
+Forge can install and register a service without supervising its process. Pulse controls lifecycle, dependencies, readiness, health, restart, and shutdown.
 
-Each service runs as its own independently supervised operating-system process. fileciteturn0file2L1-L16
+> [!NOTE]
+> Each service runs as its own independently supervised operating-system process.
 
 ---
 
@@ -506,7 +540,8 @@ src/
     └── api.py
 ```
 
-ARC does not require every service to have a special internal project structure. The important integration points are the Python package, the configured `module`, and the `Service` contract. fileciteturn0file0L156-L175
+> [!NOTE]
+> ARC does not require every service to have a special internal project structure. The important integration points are the Python package, the configured `module`, and the `Service` contract.
 
 ---
 
@@ -514,11 +549,21 @@ ARC does not require every service to have a special internal project structure.
 
 Once the minimal service works, the next useful additions are usually:
 
-- proper initialization and readiness state
-- meaningful health checks
-- graceful resource cleanup
-- explicit ARC service dependencies
-- service-specific environment configuration
-- tests for the service's own application logic
+* proper initialization and readiness state
+* meaningful health checks
+* graceful resource cleanup
+* explicit ARC service dependencies
+* service-specific environment configuration
+* tests for the service's own application logic
 
-For deeper architecture, see the ARC service documentation and the Service Runner contract. The Runner defines the common service API and execution environment, while Core and Pulse remain responsible for installation and supervision. fileciteturn0file0L310-L335
+For deeper architecture, see the ARC service documentation and the Service Runner contract. The Runner defines the common service API and execution environment, while Core and Pulse remain responsible for installation and supervision.
+
+---
+
+<div align="center">
+
+**ARC V2**
+
+*Build capabilities. Let ARC handle the system around them.*
+
+</div>
