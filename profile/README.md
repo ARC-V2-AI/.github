@@ -23,8 +23,10 @@
 
 The projects make capabilities composable: components can be installed independently, run as services, supervised through their lifecycle, and connected through explicit interfaces.
 
-> [!IMPORTANT]
-> The current architecture is centred around **ARC V2**.
+> [!TIP]
+> **Explore the ARC V2 website**
+>
+> Visit the [ARC V2 website](https://arc-v2-ai.github.io/) for an overview of the architecture, components, and project direction.
 
 ### System architecture
 
