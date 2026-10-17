@@ -1,7 +1,4 @@
 <div align="center">
-
-<img src="assets/arc-mark-field-green.png" alt="ARC V2 nested-core mark" width="92">
-
 # ARC-V2-AI
 
 **Building the systems around local AI.**
