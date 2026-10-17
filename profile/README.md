@@ -1,15 +1,18 @@
 <div align="center">
 
+<img src="assets/arc-mark-field-green.png" alt="ARC V2 nested-core mark" width="92">
+
 # ARC-V2-AI
 
 **Building the systems around local AI.**
 
+*Local-first · Service-oriented · Persistent by design*
+
 <br>
 
-[![Status](https://img.shields.io/badge/status-active%20development-orange)](#)
-[![Platform](https://img.shields.io/badge/platform-Linux-333333)](#)
-[![Architecture](https://img.shields.io/badge/architecture-service--oriented-blue)](#)
-[![Local First](https://img.shields.io/badge/local--first-green)](#)
+[![Status](https://img.shields.io/badge/status-active%20development-9BCE88?style=flat-square&labelColor=252720)](#)
+[![Platform](https://img.shields.io/badge/platform-Linux-34372F?style=flat-square)](#)
+[![Architecture](https://img.shields.io/badge/architecture-service--oriented-17A579?style=flat-square&labelColor=252720)](#)
 
 </div>
 
@@ -18,19 +21,19 @@
 ## What is ARC-V2-AI?
 
 > [!NOTE]
-> ARC-V2-AI develops the system architecture and infrastructure required to build **persistent local AI environments** rather than isolated model interfaces.
+> ARC-V2-AI develops the system architecture and infrastructure for **persistent local AI environments**, rather than isolated model interfaces.
 
-The organisation's projects focus on making capabilities composable: a system should be able to install components, run them as independent services, supervise their lifecycle, and connect them through explicit interfaces.
+The projects make capabilities composable: components can be installed independently, run as services, supervised through their lifecycle, and connected through explicit interfaces.
 
 > [!IMPORTANT]
 > The current architecture is centred around **ARC V2**.
 
-### System Architecture
+### System architecture
 
 ```mermaid
 flowchart LR
-    Core["ARC V2 Core"] --> Pulse["Pulse\nSupervision"]
-    Forge["Forge\nInstallation"] --> Services["Installed Services"]
+    Core["ARC V2 Core"] --> Pulse["Pulse<br/>Supervision"]
+    Forge["Forge<br/>Installation"] --> Services["Installed Services"]
     Pulse --> Runner["Service Runner"]
     Runner --> Services
     Services --> Capabilities["ARC Capabilities"]
@@ -41,9 +44,9 @@ flowchart LR
 
 <div align="center">
 
-### Jump to the docs
+### Explore the project
 
-**[Development Guides](#development-guides)**
+**[Development Guides](#development-guides)** · **[Architecture Principles](#architecture-principles)**
 
 </div>
 
@@ -64,23 +67,23 @@ AI computation, state, and services should be able to operate locally and remain
 
 ### Service-oriented
 
-Capabilities are implemented as focused services with explicit contracts instead of being coupled into one monolithic runtime.
+Capabilities are implemented as focused services with explicit contracts rather than coupled into one monolithic runtime.
 
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
 
-### Explicit separation
+### Clear boundaries
 
-Installation, supervision, execution, and application capability are separate concerns. Each layer should have a clear responsibility.
+Installation, supervision, execution, and application capabilities are separate concerns, each with a defined responsibility.
 
 </td>
 <td width="50%" valign="top">
 
 ### Linux-native
 
-ARC V2 is designed around Linux as the primary operating environment and uses system-level primitives where they provide a better foundation than platform-agnostic abstractions.
+ARC V2 is designed around Linux as its primary operating environment and uses system-level primitives where they provide a stronger foundation than platform-agnostic abstractions.
 
 </td>
 </tr>
@@ -90,17 +93,19 @@ ARC V2 is designed around Linux as the primary operating environment and uses sy
 
 ## Development Guides
 
-> Resources for creating and extending ARC V2 components.
+Resources for creating and extending ARC V2 components.
 
 ### Building an ARC V2 Service
 
-**[Building an ARC V2 Service](../docs/BUILDING-A-SERVICE.md)**
+**[Building an ARC V2 Service](https://github.com/ARC-V2-AI/.github/blob/main/docs/BUILDING-A-SERVICE.md)**
 
-Guide for creating, packaging, installing, and developing an independently installable ARC V2 service.
+A guide to creating, packaging, installing, and developing an independently installable ARC V2 service.
 
 ---
 
 <div align="center">
+
+<img src="assets/arc-mark-field-green.png" alt="ARC V2 nested-core mark" width="30">
 
 **ARC-V2-AI**
 
