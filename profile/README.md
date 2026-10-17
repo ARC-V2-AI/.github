@@ -103,8 +103,6 @@ A guide to creating, packaging, installing, and developing an independently inst
 
 <div align="center">
 
-<img src="assets/arc-mark-field-green.png" alt="ARC V2 nested-core mark" width="30">
-
 **ARC-V2-AI**
 
 *Building the systems around local AI.*
