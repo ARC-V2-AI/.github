@@ -6,8 +6,8 @@
 
 <br>
 
-[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python\&logoColor=white)](#)
-[![uv](https://img.shields.io/badge/Build-uv-6F42C1?logo=astral\&logoColor=white)](#)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](#)
+[![uv](https://img.shields.io/badge/Build-uv-6F42C1?logo=astral&logoColor=white)](#)
 [![ARC V2](https://img.shields.io/badge/ARC%20V2-Service-blue)](#)
 [![Architecture](https://img.shields.io/badge/architecture-service--oriented-2ea44f)](#)
 
@@ -31,6 +31,11 @@
 * [Service Configuration](#service-configuration)
 * [Service Class](#service-class)
 * [Runtime Context](#runtime-context)
+* [Service Communication](#service-communication)
+
+  * [Request/Response Calls](#requestresponse-calls)
+  * [Events](#events)
+  * [Delivery Guarantees](#delivery-guarantees)
 * [Readiness and Health](#readiness-and-health)
 * [Shutdown](#shutdown)
 * [Dependencies](#dependencies)
@@ -231,15 +236,15 @@ arc remove test
 
 The ARC-specific configuration lives in `[tool.arc.service]`.
 
-| Field         | Purpose                                         |
-| ------------- | ----------------------------------------------- |
-| `id`          | Stable ARC service identifier                   |
-| `module`      | Python module containing the `Service` subclass |
-| `name`        | Human-readable service name                     |
-| `description` | Description shown by ARC                        |
-| `restart`     | Process restart policy                          |
-| `health`      | Action for repeated health failures             |
-| `depends`     | Other ARC services required before startup      |
+| Field | Purpose |
+| --- | --- |
+| `id` | Stable ARC service identifier |
+| `module` | Python module containing the `Service` subclass |
+| `name` | Human-readable service name |
+| `description` | Description shown by ARC |
+| `restart` | Process restart policy |
+| `health` | Action for repeated health failures |
+| `depends` | Other ARC services required before startup |
 
 The example service uses the following configuration:
 
@@ -285,12 +290,12 @@ from arc_service.service import Service
 
 The service contract is centered around four methods:
 
-| Method      | Purpose                                            |
-| ----------- | -------------------------------------------------- |
-| `run()`     | Main long-running work                             |
-| `ready()`   | Reports whether initialization is complete         |
+| Method | Purpose |
+| --- | --- |
+| `run()` | Main long-running work |
+| `ready()` | Reports whether initialization is complete |
 | `healthy()` | Reports whether the service is operating correctly |
-| `stop()`    | Performs graceful shutdown                         |
+| `stop()` | Performs graceful shutdown |
 
 > [!IMPORTANT]
 > `start(ctx)` is provided by the framework and normally should not be overridden.
@@ -340,6 +345,166 @@ value = self.ctx.env.get("MY_SERVICE_SETTING")
 
 > [!NOTE]
 > ARC prepares the service environment before the process starts. Services do not load the global ARC `.env` themselves.
+
+---
+
+## Service Communication
+
+ARC services can communicate through the `BaseContext` provided by the Service Runner. Use stable service IDs, explicitly exposed methods, and typed event payloads instead of importing another service's implementation or accessing its internal resources directly.
+
+The communication API provides two patterns:
+
+| Pattern | Use it when |
+| --- | --- |
+| Request/response | A service needs a result from another service. |
+| Events | A service needs to announce something that other services may react to. |
+
+Communication is local to the ARC runtime. Core routes messages between service processes, while the Service Runner exposes the developer API. Pulse continues to manage service lifecycle and supervision.
+
+### Request/Response Calls
+
+Use a request/response call when you need an answer from another service, such as searching memory or asking the inference service to generate a response. Define Pydantic models for both the request and response, and explicitly expose the method with `@rpc_method`.
+
+For example, a memory service can expose a typed method:
+
+```python
+from pydantic import BaseModel
+from arc_service import Service, rpc_method
+
+
+class SearchRequest(BaseModel):
+    query: str
+
+
+class SearchResponse(BaseModel):
+    results: list[str]
+
+
+class MemoryService(Service):
+    @rpc_method(request=SearchRequest, response=SearchResponse)
+    async def search(self, request: SearchRequest) -> SearchResponse:
+        results = await self.search_memory(request.query)
+        return SearchResponse(results=results)
+
+    async def search_memory(self, query: str) -> list[str]:
+        # Replace with the service's actual memory implementation.
+        return [f"Result for {query}"]
+```
+
+Another service calls the exposed method through its context:
+
+```python
+from pydantic import BaseModel
+
+
+class SearchRequest(BaseModel):
+    query: str
+
+
+class SearchResponse(BaseModel):
+    results: list[str]
+
+
+response = await self.ctx.services.call(
+    "memory",
+    "search",
+    SearchRequest(query="earlier interactions"),
+    response_model=SearchResponse,
+    timeout=5.0,
+)
+
+for result in response.results:
+    self.ctx.logger.info("Memory result: %s", result)
+```
+
+The target service ID (`memory`) must match its `id` in `[tool.arc.service]`. The method name (`search`) must match the exposed method name, unless `@rpc_method` specifies a different name. Both sides must agree on the request and response models.
+
+Because the service defines and imports Pydantic models directly, declare `pydantic>=2.0` in that service package's own `[project].dependencies`. The Service Runner also depends on Pydantic, but the service should declare the library it uses directly.
+
+Other useful operations include checking current availability and listing currently connected services:
+
+```python
+available = await self.ctx.services.is_available("memory")
+services = await self.ctx.services.list()
+```
+
+Availability is a point-in-time check; a service can become unavailable immediately afterward, so calls must still handle communication errors. Calls use a 10-second default timeout. Setting `timeout` overrides it. A timeout means the caller stopped waiting; it does not guarantee that the remote operation was cancelled. Avoid automatic retries for calls that may have side effects unless the operation is idempotent.
+
+### Events
+
+Use events when a service announces something that may interest other services, without depending on which services consume it. Event types should be stable, namespaced strings such as `telegram.message_received` or `agent.response_created`.
+
+First, declare a Pydantic model for the event payload and publish it from the service that owns the event:
+
+```python
+from pydantic import BaseModel
+
+
+class TelegramMessage(BaseModel):
+    chat_id: int
+    text: str
+
+
+async def handle_incoming_message(self, chat_id: int, text: str) -> None:
+    assert self.ctx is not None
+
+    receipt = await self.ctx.events.publish(
+        "telegram.message_received",
+        TelegramMessage(chat_id=chat_id, text=text),
+    )
+
+    self.ctx.logger.debug(
+        "Event %s queued for %d subscribers",
+        receipt.event_id,
+        receipt.queued_for,
+    )
+```
+
+A service subscribes by decorating a method with `@event_handler`. The Service Runner registers the handler automatically; there is no need to manage a subscription loop yourself.
+
+```python
+from pydantic import BaseModel
+from arc_service import EventEnvelope, Service, event_handler
+
+
+class TelegramMessage(BaseModel):
+    chat_id: int
+    text: str
+
+
+class AgentService(Service):
+    @event_handler("telegram.message_received", payload=TelegramMessage)
+    async def on_message(
+        self,
+        event: EventEnvelope[TelegramMessage],
+    ) -> None:
+        assert self.ctx is not None
+
+        self.ctx.logger.info(
+            "Message from chat %s: %s",
+            event.payload.chat_id,
+            event.payload.text,
+        )
+        # Process the message. A normal return acknowledges delivery.
+```
+
+The subscriber's payload model must match the publisher's payload schema. In this version, a service can register at most one handler for a given event type.
+
+### Delivery Guarantees
+
+Events are stored by Core in a durable SQLite queue. Delivery is **at least once**, with acknowledgements and retries:
+
+- A handler's successful return acknowledges its delivery.
+- If a handler raises an exception, the event is retried with exponential backoff.
+- A delivery may be attempted more than once. If a service performs a side effect and crashes before acknowledgement, that event can be delivered again. Use `event.id` for deduplication when handling is not idempotent.
+- After 10 failed attempts, delivery is retained in the dead-letter table instead of being retried indefinitely.
+- Delivery is sequential per subscriber, so a failing event is retried before later events for that subscriber.
+- Events published before any subscriber has registered for that event type are not retained for a future first-time subscriber. After a subscription has registered, pending events for it remain queued while that subscriber is offline.
+
+The publisher receives a `PublishReceipt` with `event_id` and `queued_for`. A `queued_for` value of `0` means no currently registered subscriber was queued. A full delivery queue raises `EventQueueFullError`; handle this as a communication failure rather than assuming the event was delivered.
+
+> [!IMPORTANT]
+> Events are not exactly-once. Make handlers safe to retry, especially when they send messages, update external systems, or perform other non-repeatable actions.
 
 ---
 
@@ -452,11 +617,11 @@ memory ─────┘
 restart = "on-failure"
 ```
 
-| Value        | Meaning                                       |
-| ------------ | --------------------------------------------- |
-| `always`     | Restart whenever the process exits            |
+| Value | Meaning |
+| --- | --- |
+| `always` | Restart whenever the process exits |
 | `on-failure` | Restart when the process exits unsuccessfully |
-| `never`      | Do not restart automatically                  |
+| `never` | Do not restart automatically |
 
 ### Health
 
@@ -464,11 +629,11 @@ restart = "on-failure"
 health = "restart"
 ```
 
-| Value     | Meaning                                             |
-| --------- | --------------------------------------------------- |
-| `ignore`  | Record unhealthy state but keep the service running |
-| `restart` | Restart after repeated unhealthy checks             |
-| `stop`    | Stop after repeated unhealthy checks                |
+| Value | Meaning |
+| --- | --- |
+| `ignore` | Record unhealthy state but keep the service running |
+| `restart` | Restart after repeated unhealthy checks |
+| `stop` | Stop after repeated unhealthy checks |
 
 > [!NOTE]
 > These policies are handled by Pulse rather than by the service itself.
@@ -480,21 +645,21 @@ health = "restart"
 An installed ARC service sits between the common ARC infrastructure and its own application logic:
 
 ```text
-                  ARC Core
-                     │
-              ┌───────┴────────┐
-              │                │
-            Forge             Pulse
-              │                │
-         installs        supervises
-              │                │
-              ▼                │
-        ARC Service Runtime    │
-              │                │
-        Service Runner ◄───────┘
-              │
-              ▼
-         Your Service
+                 ARC Core
+                    │
+             ┌───────┴────────┐
+             │                │
+           Forge             Pulse
+             │                │
+        installs        supervises
+             │                │
+             ▼                │
+       ARC Service Runtime    │
+             │                │
+       Service Runner ◄───────┘
+             │
+             ▼
+        Your Service
 ```
 
 The responsibilities remain intentionally separate:
