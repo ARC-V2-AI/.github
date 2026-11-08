@@ -36,6 +36,7 @@
   * [Request/Response Calls](#requestresponse-calls)
   * [Events](#events)
   * [Delivery Guarantees](#delivery-guarantees)
+  * [Streaming RPC Calls](#streaming-rpc-calls)
 * [Readiness and Health](#readiness-and-health)
 * [Shutdown](#shutdown)
 * [Dependencies](#dependencies)
@@ -507,6 +508,103 @@ The publisher receives a `PublishReceipt` with `event_id` and `queued_for`. A `q
 > Events are not exactly-once. Make handlers safe to retry, especially when they send messages, update external systems, or perform other non-repeatable actions.
 
 ---
+
+### Streaming RPC Calls
+
+Use streaming RPC when a service needs to return a sequence of related results to one caller while the operation is still running. This is suitable for incremental inference output, agent progress, tool activity, and other workflows where the caller should receive updates before the operation finishes.
+
+Streaming RPC is separate from both request/response RPC and durable events:
+
+| Pattern | Behaviour | Use it when |
+| --- | --- | --- |
+| Request/response | One request produces one response model. | The caller needs a single result. |
+| Streaming RPC | One request produces an ordered stream of typed items for that caller. | The caller needs incremental output or progress. |
+| Events | A publisher announces data to independent subscribers. | Other services may react without being part of the original call. |
+
+#### Expose a streaming method
+
+Use `@rpc_stream` to expose a method that returns an `AsyncIterable` of Pydantic models. The `event` argument declares the model or model union that may be yielded.
+
+```python
+from collections.abc import AsyncIterator
+from typing import Literal
+
+from pydantic import BaseModel
+
+from arc_service import Service, rpc_stream
+
+
+class AgentRequest(BaseModel):
+    prompt: str
+
+
+class StreamEvent(BaseModel):
+    kind: Literal["text"]
+    text: str
+
+
+class AgentEvent(BaseModel):
+    kind: Literal["tool"]
+    name: str
+
+
+AgentResponseEvent = StreamEvent | AgentEvent
+
+
+class AgentService(Service):
+    @rpc_stream(
+        request=AgentRequest,
+        event=AgentResponseEvent,
+    )
+    async def run_agent(
+        self,
+        request: AgentRequest,
+    ) -> AsyncIterator[AgentResponseEvent]:
+        yield StreamEvent(kind="text", text="Starting agent")
+
+        # Run the agent and yield events as work progresses.
+        yield AgentEvent(kind="tool", name="search")
+        yield StreamEvent(kind="text", text="Finished")
+```
+
+The method can be an asynchronous generator, as above, or an async method that returns an `AsyncIterable`. Every yielded item is validated against the declared event type before it is sent. A method name exposed through `@rpc_stream` must not also be exposed through `@rpc_method` on the same service.
+
+For unions, use event models with distinct fields or a Pydantic discriminated union. A discriminator avoids ambiguous validation when event models have similar shapes.
+
+#### Consume a streaming method
+
+Call a streaming method through `self.ctx.services.stream()`. The method returns an asynchronous iterator; each item is validated using `event_model`.
+
+```python
+from contextlib import aclosing
+
+async with aclosing(
+    self.ctx.services.stream(
+        "agent",
+        "run_agent",
+        AgentRequest(prompt="Research this topic"),
+        event_model=AgentResponseEvent,
+        idle_timeout=60.0,
+    )
+) as events:
+    async for event in events:
+        if isinstance(event, StreamEvent):
+            self.ctx.logger.info("Agent text: %s", event.text)
+        elif isinstance(event, AgentEvent):
+            self.ctx.logger.info("Tool activity: %s", event.name)
+```
+
+`event_model` must match the event model or union declared by the target method. The caller receives the corresponding Pydantic model instance, not an untyped dictionary.
+
+#### Timeout, completion, errors, and cancellation
+
+`idle_timeout` is the maximum time to wait for the next stream item. It is reset after every item and therefore does not limit the total duration of a stream. Its default is 60 seconds. Pass `None` to disable the idle timeout.
+
+A stream ends normally when the provider's async iterator is exhausted. If the provider raises an exception, the caller receives a `RemoteCallError`. A missing target service is reported as `ServiceUnavailableError`. An idle timeout raises `RpcTimeoutError`. Invalid event data raises `ProtocolError`.
+
+Use `contextlib.aclosing` when a consumer may stop before the stream completes. Closing the iterator sends a cancellation request; the broker forwards cancellation to the provider, and the runner cancels the active provider task. Providers should use `try/finally` or `async with` to release resources when their generator is cancelled.
+
+Streaming RPC is a live caller/provider exchange. It does not provide the durable queue, acknowledgement, retry, or independent-subscriber guarantees of the event system. Use events when durable delivery is required.
 
 ## Readiness and Health
 
