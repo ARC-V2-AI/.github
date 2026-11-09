@@ -1,16 +1,16 @@
-<div align="center">
-    
+ <div align="center">
+
 # ARC-V2-AI
 
-**Building the systems around local AI.**
+**Building local AI, one problem at a time.**
 
-*Local-first · Service-oriented · Persistent by design*
+*Local-first · Service-oriented · Built in the open*
 
 <br>
 
 [![Status](https://img.shields.io/badge/status-active%20development-9BCE88?style=flat-square&labelColor=252720)](#)
 [![Platform](https://img.shields.io/badge/platform-Linux-34372F?style=flat-square)](#)
-[![Architecture](https://img.shields.io/badge/architecture-service--oriented-17A579?style=flat-square&labelColor=252720)](#)
+[![Focus](https://img.shields.io/badge/focus-local%20AI-17A579?style=flat-square&labelColor=252720)](#)
 
 </div>
 
@@ -19,14 +19,20 @@
 ## What is ARC-V2-AI?
 
 > [!NOTE]
-> ARC-V2-AI develops the system architecture and infrastructure for **persistent local AI environments**, rather than isolated model interfaces.
+> ARC V2 is a personal open-source project exploring how to make local AI more useful through independent services, persistent processes and practical system architecture.
 
-The projects make capabilities composable: components can be installed independently, run as services, supervised through their lifecycle, and connected through explicit interfaces.
+ARC originally stood for **Action & Reasoning Core**. What started as an experiment with giving local models the ability to reason and act has gradually grown into a larger project: building the systems around a local AI assistant.
+
+I'm interested in the parts that make these systems work beyond a single model conversation: installation, service supervision, process execution, persistent state and communication between components.
+
+Working with limited hardware also means making compromises. Smaller models, limited VRAM and performance constraints are part of the process. Rather than trying to compete with large cloud-based systems, I want to explore what can be achieved with the resources available.
+
+ARC V2 is an ongoing experiment in making the most of that hardware, one problem at a time.
 
 > [!TIP]
-> **Explore the ARC V2 website**
+> **Explore the project**
 >
-> Visit the [ARC V2 website](https://arc-v2-ai.github.io/) for an overview of the architecture, components, and project direction.
+> Visit the [ARC V2 website](https://arc-v2-ai.github.io/) for an overview of the project, its architecture, components and current direction.
 
 ### System architecture
 
@@ -54,20 +60,22 @@ flowchart LR
 
 ## Architecture Principles
 
+These are the ideas I try to follow when building ARC V2.
+
 <table>
 <tr>
 <td width="50%" valign="top">
 
 ### Local-first
 
-AI computation, state, and services should be able to operate locally and remain under the user's control.
+I prefer computation, state and services to run locally, where resources and data remain under the user's control.
 
 </td>
 <td width="50%" valign="top">
 
 ### Service-oriented
 
-Capabilities are implemented as focused services with explicit contracts rather than coupled into one monolithic runtime.
+I prefer focused services with explicit contracts over coupling every capability into one large application.
 
 </td>
 </tr>
@@ -76,14 +84,14 @@ Capabilities are implemented as focused services with explicit contracts rather 
 
 ### Clear boundaries
 
-Installation, supervision, execution, and application capabilities are separate concerns, each with a defined responsibility.
+Installation, supervision, execution and application capabilities should have separate responsibilities. Keeping those boundaries clear makes the system easier to understand and work on.
 
 </td>
 <td width="50%" valign="top">
 
 ### Linux-native
 
-ARC V2 is designed around Linux as its primary operating environment and uses system-level primitives where they provide a stronger foundation than platform-agnostic abstractions.
+Linux is my primary development environment and the foundation for ARC V2. I use system-level primitives where they make sense rather than introducing unnecessary abstractions.
 
 </td>
 </tr>
@@ -93,13 +101,13 @@ ARC V2 is designed around Linux as its primary operating environment and uses sy
 
 ## Development Guides
 
-Resources for creating and extending ARC V2 components.
+Notes and resources for working on and extending ARC V2.
 
 ### Building an ARC V2 Service
 
 **[Building an ARC V2 Service](https://github.com/ARC-V2-AI/.github/blob/main/docs/BUILDING-A-SERVICE.md)**
 
-A guide to creating, packaging, installing, and developing an independently installable ARC V2 service.
+A guide to creating, packaging, installing and developing an independently installable ARC V2 service.
 
 ---
 
@@ -107,6 +115,8 @@ A guide to creating, packaging, installing, and developing an independently inst
 
 **ARC-V2-AI**
 
-*Building the systems around local AI.*
+*Building local AI, one problem at a time.*
+
+<sub>Independent open-source development · Built in the open</sub>
 
 </div>
