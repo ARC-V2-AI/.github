@@ -52,7 +52,7 @@ flowchart LR
 
 ### Explore the project
 
-**[Development Guides](#development-guides)** · **[Architecture Principles](#architecture-principles)**
+**[Documentation Site](https://arc-v2-ai.github.io/ARC-V2-Docs/)** · **[Architecture Principles](#architecture-principles)**
 
 </div>
 
@@ -98,10 +98,6 @@ Linux is my primary development environment and the foundation for ARC V2. I use
 </table>
 
 ---
-
-## Development Guides
-
-Notes and resources for working on and extending ARC V2.
 
 ### Building an ARC V2 Service
 
